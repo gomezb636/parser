@@ -31,13 +31,15 @@ How to Run:
         b. lexicalAnalyzer prog1.t lexOutput.txt
            (lexicalAnalyzer existingTestFile.t fileToBeCreated.txt)
 
-    4. After the above line has ran, copy the lexOutput.txt file into the Debug folder in the parser folder
+    4. After the above line has ran, copy the lexOutput.txt file into the Debug folder in the parser 
+    folder
 
     5. In second command prompt, once in parser directory:
         a. cd parser/Debug
         b. parser lexOutput.txt > parserOutput.txt
            (parser existingFile.txt > fileToBeCreated.txt)
 
-    6. Final output from parser can be found in "parserOutput.txt" file
+    6. Final output from parser can be found in "parserOutput.txt" file, which is in the Debug folder 
+    in the parser folder
 
 Link to github repository: https://github.com/gomezb636/parser

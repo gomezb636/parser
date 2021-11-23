@@ -33,10 +33,7 @@ typedef struct {
     int lnError, colError;
 
     union {
-        // constants
         int n;
-
-        // indentations
         char* text;
     };
 } token_s;
@@ -48,14 +45,14 @@ da_dim(text, char);
 token_s gettoken(void);
 
 static void error(int lineError, int colError, const char* format, ...) {
-    char buf[1000];
+    char buffer[1000];
     va_list ap;
 
     va_start(ap, format);
-    vsprintf(buf, format, ap);
+    vsprintf(buffer, format, ap);
     va_end(ap);
 
-    printf("(%d,%d) error: %s\n", lineError, colError, buf);
+    printf("(%d,%d) error: %s\n", lineError, colError, buffer);
     exit(1);
 }
 
@@ -208,24 +205,24 @@ token_s gettoken(void) {
     int colError = col;
 
     switch (ch) {
-    case '{':  next_ch(); return (token_s) { OpenBracket_token, lineError, colError, { 0 } };
-    case '}':  next_ch(); return (token_s) { CloseBracket_token, lineError, colError, { 0 } };
-    case '(':  next_ch(); return (token_s) { OpenParenthese_token, lineError, colError, { 0 } };
+    case '{':  next_ch(); return (token_s) { OpenBracket_token,     lineError, colError, { 0 } };
+    case '}':  next_ch(); return (token_s) { CloseBracket_token,    lineError, colError, { 0 } };
+    case '(':  next_ch(); return (token_s) { OpenParenthese_token,  lineError, colError, { 0 } };
     case ')':  next_ch(); return (token_s) { CloseParenthese_token, lineError, colError, { 0 } };
-    case '+':  next_ch(); return (token_s) { Add_token, lineError, colError, { 0 } };
-    case '-':  next_ch(); return (token_s) { Sub_token, lineError, colError, { 0 } };
-    case '*':  next_ch(); return (token_s) { Mult_token, lineError, colError, { 0 } };
-    case '%':  next_ch(); return (token_s) { Mod_token, lineError, colError, { 0 } };
-    case ';':  next_ch(); return (token_s) { Semicolon_token, lineError, colError, { 0 } };
-    case ',':  next_ch(); return (token_s) { Comma_token, lineError, colError, { 0 } };
+    case '+':  next_ch(); return (token_s) { Add_token,             lineError, colError, { 0 } };
+    case '-':  next_ch(); return (token_s) { Sub_token,             lineError, colError, { 0 } };
+    case '*':  next_ch(); return (token_s) { Mult_token,            lineError, colError, { 0 } };
+    case '%':  next_ch(); return (token_s) { Mod_token,             lineError, colError, { 0 } };
+    case ';':  next_ch(); return (token_s) { Semicolon_token,       lineError, colError, { 0 } };
+    case ',':  next_ch(); return (token_s) { Comma_token,           lineError, colError, { 0 } };
     case '/':  next_ch(); return div_comment(lineError, colError);
     case '\'': next_ch(); return char_lit(ch, lineError, colError);
-    case '<':  next_ch(); return follow('=', LessThanEQ_token, LessThan_token, lineError, colError);
+    case '<':  next_ch(); return follow('=', LessThanEQ_token,    LessThan_token,    lineError, colError);
     case '>':  next_ch(); return follow('=', GreaterThanEQ_token, GreaterThan_token, lineError, colError);
-    case '=':  next_ch(); return follow('=', EqualTo_token, AssignEQ_token, lineError, colError);
-    case '!':  next_ch(); return follow('=', NotEqualTo_token, Not_token, lineError, colError);
-    case '&':  next_ch(); return follow('&', And_token, EOI_token, lineError, colError);
-    case '|':  next_ch(); return follow('|', Or_token, EOI_token, lineError, colError);
+    case '=':  next_ch(); return follow('=', EqualTo_token,       AssignEQ_token,    lineError, colError);
+    case '!':  next_ch(); return follow('=', NotEqualTo_token,    Not_token,         lineError, colError);
+    case '&':  next_ch(); return follow('&', And_token,           EOI_token,         lineError, colError);
+    case '|':  next_ch(); return follow('|', Or_token,            EOI_token,         lineError, colError);
     case '"': return stringLiteral(ch, lineError, colError);
     default:   return identifier_int(lineError, colError);
     case EOF:  return (token_s) { EOI_token, lineError, colError, { 0 } };

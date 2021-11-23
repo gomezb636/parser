@@ -1,12 +1,16 @@
 # parser
 
+CPSC 323 Programming Project 2 - Parser in C
+
 Teammates:
     
-    1. Vibha Rajagopalan
+    1. Vibha Rajagopalan - vibha@csu.fullerton.edu
 
-    2. Brenda Gomez
+    2. Brenda Gomez - gomezb636@csu.fullerton.edu
 
-    3. Anjali patel
+    3. Anjali patel - anpatel8@csu.fullerton.edu
+
+Our project has both a Lexical Analyzer and a Parser. Our Parser takes in the output from the Lexical Analyzer and generates a Parse tree. This is also known as the second phase of the compiler desing process.
     
 *All output files have been provided, but if you wish to test on your own, below are the instructions to follow*
 
@@ -27,3 +31,5 @@ How to Run:
            (parser existingFile.txt > fileToBeCreated.txt)
 
     5. Final output from parser can be found in "parserOutput.txt" file
+
+Link to github repository: https://github.com/gomezb636/parser

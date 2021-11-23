@@ -9,10 +9,10 @@
 #define NELEMS(arr) (sizeof(arr) / sizeof(arr[0]))
 
 typedef enum {
-    tk_EOI, tk_Mul, tk_Div, tk_Mod, tk_Add, tk_Sub, tk_Negate, tk_Not, tk_Lss, tk_Leq, tk_Gtr,
-    tk_Geq, tk_Eql, tk_Neq, tk_Assign, tk_And, tk_Or, tk_If, tk_Else, tk_While, tk_Print,
-    tk_Putc, tk_Lparen, tk_Rparen, tk_Lbrace, tk_Rbrace, tk_Semi, tk_Comma, tk_Ident,
-    tk_Integer, tk_String
+    EOI_token, Mul_token, Div_token, Mod_token, Add_token, Sub_token, Neg_token, Not_token, LessThan_token, LessThanEQ_token, GreaterThan_token,
+    GreaterThanEQ_token, EqualTo_token, NotEqualTo_token, AssignEQ_token, And_token, Or_token, If_token, Else_token, While_token, Print_token,
+    PutC_token, OpenParenthese_token, CloseParenthese_token, OpenBracket_token, CloseBracket_token, Semicolon_token, Comma_token, Idenifier_token,
+    Int_token, String_token
 } TokenType;
 
 typedef enum {
@@ -22,12 +22,13 @@ typedef enum {
 } NodeType;
 
 typedef struct {
-    TokenType tok;
-    int err_ln;
-    int err_col;
-    char* text;             /* ident or string literal or integer value */
-} tok_s;
+    TokenType token;
+    int lnError, colError;
+    char* text;
+} token_s;
 
+
+// tree
 typedef struct Tree {
     NodeType node_type;
     struct Tree* left;
@@ -35,45 +36,45 @@ typedef struct Tree {
     char* value;
 } Tree;
 
-// dependency: Ordered by tok, must remain in same order as TokenType enum
+
 struct {
     char* text, * enum_text;
-    TokenType   tok;
+    TokenType   token;
     bool        right_associative, is_binary, is_unary;
     int         precedence;
     NodeType    node_type;
-} atr[] = {
-    {"EOI",             "End_of_input"   , tk_EOI,     false, false, false, -1, -1        },
-    {"*",               "Op_multiply"    , tk_Mul,     false, true,  false, 13, nd_Mul    },
-    {"/",               "Op_divide"      , tk_Div,     false, true,  false, 13, nd_Div    },
-    {"%",               "Op_mod"         , tk_Mod,     false, true,  false, 13, nd_Mod    },
-    {"+",               "Op_add"         , tk_Add,     false, true,  false, 12, nd_Add    },
-    {"-",               "Op_subtract"    , tk_Sub,     false, true,  false, 12, nd_Sub    },
-    {"-",               "Op_negate"      , tk_Negate,  false, false, true,  14, nd_Negate },
-    {"!",               "Op_not"         , tk_Not,     false, false, true,  14, nd_Not    },
-    {"<",               "Op_less"        , tk_Lss,     false, true,  false, 10, nd_Lss    },
-    {"<=",              "Op_lessequal"   , tk_Leq,     false, true,  false, 10, nd_Leq    },
-    {">",               "Op_greater"     , tk_Gtr,     false, true,  false, 10, nd_Gtr    },
-    {">=",              "Op_greaterequal", tk_Geq,     false, true,  false, 10, nd_Geq    },
-    {"==",              "Op_equal"       , tk_Eql,     false, true,  false,  9, nd_Eql    },
-    {"!=",              "Op_notequal"    , tk_Neq,     false, true,  false,  9, nd_Neq    },
-    {"=",               "Op_assign"      , tk_Assign,  false, false, false, -1, nd_Assign },
-    {"&&",              "Op_and"         , tk_And,     false, true,  false,  5, nd_And    },
-    {"||",              "Op_or"          , tk_Or,      false, true,  false,  4, nd_Or     },
-    {"if",              "Keyword_if"     , tk_If,      false, false, false, -1, nd_If     },
-    {"else",            "Keyword_else"   , tk_Else,    false, false, false, -1, -1        },
-    {"while",           "Keyword_while"  , tk_While,   false, false, false, -1, nd_While  },
-    {"print",           "Keyword_print"  , tk_Print,   false, false, false, -1, -1        },
-    {"putc",            "Keyword_putc"   , tk_Putc,    false, false, false, -1, -1        },
-    {"(",               "LeftParen"      , tk_Lparen,  false, false, false, -1, -1        },
-    {")",               "RightParen"     , tk_Rparen,  false, false, false, -1, -1        },
-    {"{",               "LeftBrace"      , tk_Lbrace,  false, false, false, -1, -1        },
-    {"}",               "RightBrace"     , tk_Rbrace,  false, false, false, -1, -1        },
-    {";",               "Semicolon"      , tk_Semi,    false, false, false, -1, -1        },
-    {",",               "Comma"          , tk_Comma,   false, false, false, -1, -1        },
-    {"Ident",           "Identifier"     , tk_Ident,   false, false, false, -1, nd_Ident  },
-    {"Integer literal", "Integer"        , tk_Integer, false, false, false, -1, nd_Integer},
-    {"String literal",  "String"         , tk_String,  false, false, false, -1, nd_String },
+} atrr[] = {
+    {"EOI",             "End_of_input"   , EOI_token,               false, false, false, -1, -1        },
+    {"*",               "Op_multiply"    , Mul_token,               false, true,  false, 13, nd_Mul    },
+    {"/",               "Op_divide"      , Div_token,               false, true,  false, 13, nd_Div    },
+    {"%",               "Op_mod"         , Mod_token,               false, true,  false, 13, nd_Mod    },
+    {"+",               "Op_add"         , Add_token,               false, true,  false, 12, nd_Add    },
+    {"-",               "Op_subtract"    , Sub_token,               false, true,  false, 12, nd_Sub    },
+    {"-",               "Op_negate"      , Neg_token,               false, false, true,  14, nd_Negate },
+    {"!",               "Op_not"         , Not_token,               false, false, true,  14, nd_Not    },
+    {"<",               "Op_less"        , LessThan_token,          false, true,  false, 10, nd_Lss    },
+    {"<=",              "Op_lessequal"   , LessThanEQ_token,        false, true,  false, 10, nd_Leq    },
+    {">",               "Op_greater"     , GreaterThan_token,       false, true,  false, 10, nd_Gtr    },
+    {">=",              "Op_greaterequal", GreaterThanEQ_token,     false, true,  false, 10, nd_Geq    },
+    {"==",              "Op_equal"       , EqualTo_token,           false, true,  false,  9, nd_Eql    },
+    {"!=",              "Op_notequal"    , NotEqualTo_token,        false, true,  false,  9, nd_Neq    },
+    {"=",               "Op_assign"      , AssignEQ_token,          false, false, false, -1, nd_Assign },
+    {"&&",              "Op_and"         , And_token,               false, true,  false,  5, nd_And    },
+    {"||",              "Op_or"          , Or_token,                false, true,  false,  4, nd_Or     },
+    {"if",              "Keyword_if"     , If_token,                false, false, false, -1, nd_If     },
+    {"else",            "Keyword_else"   , Else_token,              false, false, false, -1, -1        },
+    {"while",           "Keyword_while"  , While_token,             false, false, false, -1, nd_While  },
+    {"print",           "Keyword_print"  , Print_token,             false, false, false, -1, -1        },
+    {"putc",            "Keyword_putc"   , PutC_token,              false, false, false, -1, -1        },
+    {"(",               "LeftParen"      , OpenParenthese_token,    false, false, false, -1, -1        },
+    {")",               "RightParen"     , CloseParenthese_token,   false, false, false, -1, -1        },
+    {"{",               "LeftBrace"      , OpenBracket_token,       false, false, false, -1, -1        },
+    {"}",               "RightBrace"     , CloseBracket_token,      false, false, false, -1, -1        },
+    {";",               "Semicolon"      , Semicolon_token,         false, false, false, -1, -1        },
+    {",",               "Comma"          , Comma_token,             false, false, false, -1, -1        },
+    {"Ident",           "Identifier"     , Idenifier_token,         false, false, false, -1, nd_Ident  },
+    {"Integer literal", "Integer"        , Int_token, false,        false, false,        -1, nd_Integer},
+    {"String literal",  "String"         , String_token,            false, false, false, -1, nd_String },
 };
 
 char* Display_nodes[] = { "Identifier", "String", "Integer", "Sequence", "If", "Prtc",
@@ -81,19 +82,19 @@ char* Display_nodes[] = { "Identifier", "String", "Integer", "Sequence", "If", "
     "Add", "Subtract", "Less", "LessEqual", "Greater", "GreaterEqual", "Equal",
     "NotEqual", "And", "Or" };
 
-static tok_s tok;
+static token_s token;
 static FILE* source_fp, * dest_fp;
 
-Tree* paren_expr();
+Tree* parentheseExpr();
 
-void error(int err_line, int err_col, const char* fmt, ...) {
+void error(int lineError, int colError, const char* format, ...) {
     va_list ap;
-    char buf[1000];
+    char buffer[1000];
 
-    va_start(ap, fmt);
-    vsprintf(buf, fmt, ap);
+    va_start(ap, format);
+    vsprintf(buffer, format, ap);
     va_end(ap);
-    printf("(%d, %d) error: %s\n", err_line, err_col, buf);
+    printf("(%d, %d) error: %s\n", lineError, colError, buffer);
     exit(1);
 }
 
@@ -118,7 +119,7 @@ char* read_line(int* len) {
     return text;
 }
 
-char* rtrim(char* text, int* len) {         // remove trailing spaces
+char* rightTrim(char* text, int* len) {
     for (; *len > 0 && isspace(text[*len - 1]); --(*len))
         ;
 
@@ -126,42 +127,43 @@ char* rtrim(char* text, int* len) {         // remove trailing spaces
     return text;
 }
 
-TokenType get_enum(const char* name) {      // return internal version of name
-    for (size_t i = 0; i < NELEMS(atr); i++) {
-        if (strcmp(atr[i].enum_text, name) == 0)
-            return atr[i].tok;
+TokenType getEnum(const char* name) {
+    for (size_t i = 0; i < NELEMS(atrr); i++) {
+        if (strcmp(atrr[i].enum_text, name) == 0)
+            return atrr[i].token;
     }
     error(0, 0, "Unknown token %s\n", name);
     return 0;
 }
 
-tok_s gettok() {
+token_s gettoken() {
     int len;
-    tok_s tok;
-    char* yytext = read_line(&len);
-    yytext = rtrim(yytext, &len);
+    token_s token;
+    char* currText = read_line(&len);
+    currText = rightTrim(currText, &len);
 
     // [ ]*{lineno}[ ]+{colno}[ ]+token[ ]+optional
 
     // get line and column
-    tok.err_ln = atoi(strtok(yytext, " "));
-    tok.err_col = atoi(strtok(NULL, " "));
+    //atoi() is used to convert string value to int value
+    token.lnError = atoi(strtok(currText, " "));
+    token.colError = atoi(strtok(NULL, " "));
 
     // get the token name
     char* name = strtok(NULL, " ");
-    tok.tok = get_enum(name);
+    token.token = getEnum(name);
 
     // if there is extra data, get it
     char* p = name + strlen(name);
-    if (p != &yytext[len]) {
+    if (p != &currText[len]) {
         for (++p; isspace(*p); ++p)
             ;
-        tok.text = strdup(p);
+        token.text = strdup(p);
     }
-    return tok;
+    return token;
 }
 
-Tree* make_node(NodeType node_type, Tree* left, Tree* right) {
+Tree* makeNode(NodeType node_type, Tree* left, Tree* right) {
     Tree* t = calloc(sizeof(Tree), 1);
     t->node_type = node_type;
     t->left = left;
@@ -169,7 +171,7 @@ Tree* make_node(NodeType node_type, Tree* left, Tree* right) {
     return t;
 }
 
-Tree* make_leaf(NodeType node_type, char* value) {
+Tree* makeLeaf(NodeType node_type, char* value) {
     Tree* t = calloc(sizeof(Tree), 1);
     t->node_type = node_type;
     t->value = strdup(value);
@@ -177,129 +179,137 @@ Tree* make_leaf(NodeType node_type, char* value) {
 }
 
 void expect(const char msg[], TokenType s) {
-    if (tok.tok == s) {
-        tok = gettok();
+    if (token.token == s) {
+        token = gettoken();
         return;
     }
-    error(tok.err_ln, tok.err_col, "%s: Expecting '%s', found '%s'\n", msg, atr[s].text, atr[tok.tok].text);
+    error(token.lnError, token.colError, "%s: Expecting '%s', found '%s'\n", msg, atrr[s].text, atrr[token.token].text);
 }
 
-Tree* expr(int p) {
+Tree* expression(int p) {
     Tree* x = NULL, * node;
     TokenType op;
 
-    switch (tok.tok) {
-    case tk_Lparen:
-        x = paren_expr();
+    switch (token.token) {
+    case OpenParenthese_token:
+        x = parentheseExpr();
         break;
-    case tk_Sub: case tk_Add:
-        op = tok.tok;
-        tok = gettok();
-        node = expr(atr[tk_Negate].precedence);
-        x = (op == tk_Sub) ? make_node(nd_Negate, node, NULL) : node;
+    case Sub_token: case Add_token:
+        op = token.token;
+        token = gettoken();
+        node = expression(atrr[Neg_token].precedence);
+        x = (op == Sub_token) ? makeNode(nd_Negate, node, NULL) : node;
         break;
-    case tk_Not:
-        tok = gettok();
-        x = make_node(nd_Not, expr(atr[tk_Not].precedence), NULL);
+    case Not_token:
+        token = gettoken();
+        x = makeNode(nd_Not, expression(atrr[Not_token].precedence), NULL);
         break;
-    case tk_Ident:
-        x = make_leaf(nd_Ident, tok.text);
-        tok = gettok();
+    case Idenifier_token:
+        x = makeLeaf(nd_Ident, token.text);
+        token = gettoken();
         break;
-    case tk_Integer:
-        x = make_leaf(nd_Integer, tok.text);
-        tok = gettok();
+    case Int_token:
+        x = makeLeaf(nd_Integer, token.text);
+        token = gettoken();
         break;
     default:
-        error(tok.err_ln, tok.err_col, "Expecting a primary, found: %s\n", atr[tok.tok].text);
+        error(token.lnError, token.colError, "Expecting a primary, found: %s\n", atrr[token.token].text);
     }
 
-    while (atr[tok.tok].is_binary && atr[tok.tok].precedence >= p) {
-        TokenType op = tok.tok;
+    while (atrr[token.token].is_binary && atrr[token.token].precedence >= p) {
+        TokenType op = token.token;
 
-        tok = gettok();
+        token = gettoken();
 
-        int q = atr[op].precedence;
-        if (!atr[op].right_associative)
+        int q = atrr[op].precedence;
+        if (!atrr[op].right_associative)
             q++;
 
         node = expr(q);
-        x = make_node(atr[op].node_type, x, node);
+        x = makeNode(atrr[op].node_type, x, node);
     }
     return x;
 }
 
-Tree* paren_expr() {
-    expect("paren_expr", tk_Lparen);
-    Tree* t = expr(0);
-    expect("paren_expr", tk_Rparen);
+Tree* parentheseExpr() {
+    expect("parentheseExpr", OpenParenthese_token);
+    Tree* t = expression(0);
+    expect("parentheseExpr", CloseParenthese_token);
     return t;
 }
 
-Tree* stmt() {
+Tree* statement() {
     Tree* t = NULL, * v, * e, * s, * s2;
 
-    switch (tok.tok) {
-    case tk_If:
-        tok = gettok();
-        e = paren_expr();
-        s = stmt();
+    switch (token.token) {
+    case If_token:
+        token = gettoken();
+        e = parentheseExpr();
+        s = statement();
         s2 = NULL;
-        if (tok.tok == tk_Else) {
-            tok = gettok();
-            s2 = stmt();
+        if (token.token == Else_token) {
+            token = gettoken();
+            s2 = statement();
         }
-        t = make_node(nd_If, e, make_node(nd_If, s, s2));
+        t = makeNode(nd_If, e, makeNode(nd_If, s, s2));
         break;
-    case tk_Putc:
-        tok = gettok();
-        e = paren_expr();
-        t = make_node(nd_Prtc, e, NULL);
-        expect("Putc", tk_Semi);
+
+    case PutC_token:
+        token = gettoken();
+        e = parentheseExpr();
+        t = makeNode(nd_Prtc, e, NULL);
+        expect("Putc", Semicolon_token);
         break;
-    case tk_Print: /* print '(' expr {',' expr} ')' */
-        tok = gettok();
-        for (expect("Print", tk_Lparen); ; expect("Print", tk_Comma)) {
-            if (tok.tok == tk_String) {
-                e = make_node(nd_Prts, make_leaf(nd_String, tok.text), NULL);
-                tok = gettok();
+
+    case Print_token:
+        token = gettoken();
+        for (expect("Print", OpenParenthese_token); ; expect("Print", Comma_token)) {
+            if (token.token == String_token) {
+                e = makeNode(nd_Prts, makeLeaf(nd_String, token.text), NULL);
+                token = gettoken();
             }
             else
-                e = make_node(nd_Prti, expr(0), NULL);
+                e = makeNode(nd_Prti, expression(0), NULL);
 
-            t = make_node(nd_Sequence, t, e);
+            t = makeNode(nd_Sequence, t, e);
 
-            if (tok.tok != tk_Comma)
+            if (token.token != Comma_token)
                 break;
         }
-        expect("Print", tk_Rparen);
-        expect("Print", tk_Semi);
+        expect("Print", CloseParenthese_token);
+        expect("Print", Semicolon_token);
         break;
-    case tk_Semi:
-        tok = gettok();
+
+    case Semicolon_token:
+        token = gettoken();
         break;
-    case tk_Ident:
-        v = make_leaf(nd_Ident, tok.text);
-        tok = gettok();
-        expect("assign", tk_Assign);
-        e = expr(0);
-        t = make_node(nd_Assign, v, e);
-        expect("assign", tk_Semi);
+
+    case Idenifier_token:
+        v = makeLeaf(nd_Ident, token.text);
+        token = gettoken();
+        expect("assign", AssignEQ_token);
+        e = expression(0);
+        t = makeNode(nd_Assign, v, e);
+        expect("assign", Semicolon_token);
         break;
-    case tk_While:
-        tok = gettok();
-        e = paren_expr();
-        s = stmt();
-        t = make_node(nd_While, e, s);
+
+    case While_token:
+        token = gettoken();
+        e = parentheseExpr();
+        s = statement();
+        t = makeNode(nd_While, e, s);
         break;
-    case tk_Lbrace:         /* {stmt} */
-        for (expect("Lbrace", tk_Lbrace); tok.tok != tk_Rbrace && tok.tok != tk_EOI;)
-            t = make_node(nd_Sequence, t, stmt());
-        expect("Lbrace", tk_Rbrace);
+
+    case OpenBracket_token:
+        for (expect("Lbrace", OpenBracket_token); token.token != CloseBracket_token && token.token != EOI_token;)
+            t = makeNode(nd_Sequence, t, statement());
+        expect("Lbrace", CloseBracket_token);
         break;
-    case tk_EOI:
+
+    case EOI_token:
         break;
-    default: error(tok.err_ln, tok.err_col, "expecting start of statement, found '%s'\n", atr[tok.tok].text);
+        
+    default: error(token.lnError, token.colError, "expecting start of statement, found '%s'\n", atrr[token.token].text);
     }
     return t;
 }
@@ -307,10 +317,10 @@ Tree* stmt() {
 Tree* parse() {
     Tree* t = NULL;
 
-    tok = gettok();
+    token = gettoken();
     do {
-        t = make_node(nd_Sequence, t, stmt());
-    } while (t != NULL && tok.tok != tk_EOI);
+        t = makeNode(nd_Sequence, t, statement());
+    } while (t != NULL && token.token != EOI_token);
     return t;
 }
 

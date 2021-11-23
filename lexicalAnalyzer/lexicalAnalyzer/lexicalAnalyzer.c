@@ -19,190 +19,227 @@
 #define da_append(name, x)  do {da_redim(name); name[_qy_ ## name ## _p++] = x;} while (0)
 #define da_len(name)        _qy_ ## name ## _p
 
+// the different tokens
 typedef enum {
-    tk_EOI, tk_Mul, tk_Div, tk_Mod, tk_Add, tk_Sub, tk_Negate, tk_Not, tk_Lss, tk_Leq,
-    tk_Gtr, tk_Geq, tk_Eq, tk_Neq, tk_Assign, tk_And, tk_Or, tk_If, tk_Else, tk_While,
-    tk_Print, tk_Putc, tk_Lparen, tk_Rparen, tk_Lbrace, tk_Rbrace, tk_Semi, tk_Comma,
-    tk_Ident, tk_Integer, tk_String
+    EOI_token, Mult_token, Div_token, Mod_token, Add_token, Sub_token, Neg_token, Not_token, LessThan_token, LessThanEQ_token,
+    GreaterThan_token, GreaterThanEQ_token, EqualTo_token, NotEqualTo_token, AssignEQ_token, And_token, Or_token, If_token, 
+    Else_token, While_token, Print_token, PutC_token, OpenParenthese_token, CloseParenthese_token, OpenBracket_token, CloseBracket_token, 
+    Semicolon_token, Comma_token, Identifier_token, Int_token, String_token
 } TokenType;
 
+// definition of a token
 typedef struct {
-    TokenType tok;
-    int err_ln, err_col;
+    TokenType token;
+    int lnError, colError;
+
     union {
-        int n;                  /* value for constants */
-        char* text;             /* text for idents */
+        // constants
+        int n;
+
+        // indentations
+        char* text;
     };
-} tok_s;
+} token_s;
 
 static FILE* source_fp, * dest_fp;
-static int line = 1, col = 0, the_ch = ' ';
+static int line = 1, col = 0, ch = ' ';
 da_dim(text, char);
 
-tok_s gettok(void);
+token_s gettoken(void);
 
-static void error(int err_line, int err_col, const char* fmt, ...) {
+static void error(int lineError, int colError, const char* format, ...) {
     char buf[1000];
     va_list ap;
 
-    va_start(ap, fmt);
-    vsprintf(buf, fmt, ap);
+    va_start(ap, format);
+    vsprintf(buf, format, ap);
     va_end(ap);
-    printf("(%d,%d) error: %s\n", err_line, err_col, buf);
+
+    printf("(%d,%d) error: %s\n", lineError, colError, buf);
     exit(1);
 }
 
-static int next_ch(void) {     /* get next char from input */
-    the_ch = getc(source_fp);
+// get next char from input
+static int next_ch(void) {
+    ch = getc(source_fp);
     ++col;
-    if (the_ch == '\n') {
+
+    // if new line, increment line and reset col = 0
+    if (ch == '\n') {
         ++line;
         col = 0;
     }
-    return the_ch;
+
+    return ch;
 }
 
-static tok_s char_lit(int n, int err_line, int err_col) {   /* 'x' */
-    if (the_ch == '\'')
-        error(err_line, err_col, "gettok: empty character constant");
-    if (the_ch == '\\') {
+
+static token_s char_lit(int n, int lineError, int colError) {
+    if (ch == '\'')
+        error(lineError, colError, "gettoken: empty character constant");
+
+    if (ch == '\\') {
         next_ch();
-        if (the_ch == 'n')
+        if (ch == 'n')
             n = 10;
-        else if (the_ch == '\\')
+        else if (ch == '\\')
             n = '\\';
-        else error(err_line, err_col, "gettok: unknown escape sequence \\%c", the_ch);
+        else error(lineError, colError, "gettoken: unknown escape sequence \\%c", ch);
     }
+
     if (next_ch() != '\'')
-        error(err_line, err_col, "multi-character constant");
+        error(lineError, colError, "multi-character constant");
     next_ch();
-    return (tok_s) { tk_Integer, err_line, err_col, { n } };
+
+    return (token_s) { Int_token, lineError, colError, { n } };
 }
 
-static tok_s div_or_cmt(int err_line, int err_col) { /* process divide or comments */
-    if (the_ch != '*')
-        return (tok_s) { tk_Div, err_line, err_col, { 0 } };
 
-    /* comment found */
+// check if / (slash) is for mathematical divide symbol or for a comment
+// ex: "100/10" vs "// comment"
+static token_s div_comment(int lineError, int colError) {
+    if (ch != '*')
+        return (token_s) { Div_token, lineError, colError, { 0 } };
+
+    // get next char and check if comment
     next_ch();
     for (;;) {
-        if (the_ch == '*') {
+        if (ch == '*') {
             if (next_ch() == '/') {
                 next_ch();
-                return gettok();
+                return gettoken();
             }
         }
-        else if (the_ch == EOF)
-            error(err_line, err_col, "EOF in comment");
+        else if (ch == EOF)
+            error(lineError, colError, "EOF in comment");
         else
             next_ch();
     }
 }
 
-static tok_s string_lit(int start, int err_line, int err_col) { /* "st" */
+
+// check if string literal
+static token_s stringLiteral(int start, int lineError, int colError) { 
     da_rewind(text);
 
     while (next_ch() != start) {
-        if (the_ch == '\n') error(err_line, err_col, "EOL in string");
-        if (the_ch == EOF)  error(err_line, err_col, "EOF in string");
-        da_append(text, (char)the_ch);
+        if (ch == '\n') error(lineError, colError, "EOL in string");
+        if (ch == EOF)  error(lineError, colError, "EOF in string");
+        da_append(text, (char)ch);
     }
     da_append(text, '\0');
 
     next_ch();
-    return (tok_s) { tk_String, err_line, err_col, { .text = text } };
+    return (token_s) { String_token, lineError, colError, { .text = text } };
 }
 
-static int kwd_cmp(const void* p1, const void* p2) {
+
+static int keywordCompare(const void* p1, const void* p2) {
     return strcmp(*(char**)p1, *(char**)p2);
 }
 
-static TokenType get_ident_type(const char* ident) {
+
+// check if keywords 
+static TokenType getIdentifierType(const char* identifier) {
     static struct {
         const char* s;
         TokenType sym;
-    } kwds[] = {
-        {"else",  tk_Else},
-        {"if",    tk_If},
-        {"print", tk_Print},
-        {"putc",  tk_Putc},
-        {"while", tk_While},
+    } keywords[] = {
+        {"else",  Else_token},
+        {"if",    If_token},
+        {"print", Print_token},
+        {"putc",  PutC_token},
+        {"while", While_token},
     }, * kwp;
 
-    return (kwp = bsearch(&ident, kwds, NELEMS(kwds), sizeof(kwds[0]), kwd_cmp)) == NULL ? tk_Ident : kwp->sym;
+    return (kwp = bsearch(&identifier, keywords, NELEMS(keywords), sizeof(keywords[0]), keywordCompare)) == NULL ? Identifier_token : kwp->sym;
 }
 
-static tok_s ident_or_int(int err_line, int err_col) {
+
+// check if identifier or int
+static token_s identifier_int(int lineError, int colError) {
     int n, is_number = true;
 
     da_rewind(text);
-    while (isalnum(the_ch) || the_ch == '_') {
-        da_append(text, (char)the_ch);
-        if (!isdigit(the_ch))
+    while (isalnum(ch) || ch == '_') {
+        da_append(text, (char)ch);
+        if (!isdigit(ch))
             is_number = false;
         next_ch();
     }
     if (da_len(text) == 0)
-        error(err_line, err_col, "gettok: unrecognized character (%d) '%c'\n", the_ch, the_ch);
+        error(lineError, colError, "gettoken: unrecognized character (%d) '%c'\n", ch, ch);
+
     da_append(text, '\0');
     if (isdigit(text[0])) {
         if (!is_number)
-            error(err_line, err_col, "invalid number: %s\n", text);
+            error(lineError, colError, "invalid number: %s\n", text);
+
         n = strtol(text, NULL, 0);
         if (n == LONG_MAX && errno == ERANGE)
-            error(err_line, err_col, "Number exceeds maximum value");
-        return (tok_s) { tk_Integer, err_line, err_col, { n } };
+            error(lineError, colError, "Number exceeds maximum value");
+
+        return (token_s) { Int_token, lineError, colError, { n } };
     }
-    return (tok_s) { get_ident_type(text), err_line, err_col, { .text = text } };
+
+    return (token_s) { getIdentifierType(text), lineError, colError, { .text = text } };
 }
 
-static tok_s follow(int expect, TokenType ifyes, TokenType ifno, int err_line, int err_col) {   /* look ahead for '>=', etc. */
-    if (the_ch == expect) {
+
+// check following char to see if its ">=, <=, etc"
+static token_s follow(int expect, TokenType ifyes, TokenType ifno, int lineError, int colError) {
+    if (ch == expect) {
         next_ch();
-        return (tok_s) { ifyes, err_line, err_col, { 0 } };
+        return (token_s) { ifyes, lineError, colError, { 0 } };
     }
-    if (ifno == tk_EOI)
-        error(err_line, err_col, "follow: unrecognized character '%c' (%d)\n", the_ch, the_ch);
-    return (tok_s) { ifno, err_line, err_col, { 0 } };
+    if (ifno == EOI_token)
+        error(lineError, colError, "follow: unrecognized character '%c' (%d)\n", ch, ch);
+
+    return (token_s) { ifno, lineError, colError, { 0 } };
 }
 
-tok_s gettok(void) {            /* return the token type */
-    /* skip white space */
-    while (isspace(the_ch))
+
+// return token 
+token_s gettoken(void) {
+    while (isspace(ch))
         next_ch();
-    int err_line = line;
-    int err_col = col;
-    switch (the_ch) {
-    case '{':  next_ch(); return (tok_s) { tk_Lbrace, err_line, err_col, { 0 } };
-    case '}':  next_ch(); return (tok_s) { tk_Rbrace, err_line, err_col, { 0 } };
-    case '(':  next_ch(); return (tok_s) { tk_Lparen, err_line, err_col, { 0 } };
-    case ')':  next_ch(); return (tok_s) { tk_Rparen, err_line, err_col, { 0 } };
-    case '+':  next_ch(); return (tok_s) { tk_Add, err_line, err_col, { 0 } };
-    case '-':  next_ch(); return (tok_s) { tk_Sub, err_line, err_col, { 0 } };
-    case '*':  next_ch(); return (tok_s) { tk_Mul, err_line, err_col, { 0 } };
-    case '%':  next_ch(); return (tok_s) { tk_Mod, err_line, err_col, { 0 } };
-    case ';':  next_ch(); return (tok_s) { tk_Semi, err_line, err_col, { 0 } };
-    case ',':  next_ch(); return (tok_s) { tk_Comma, err_line, err_col, { 0 } };
-    case '/':  next_ch(); return div_or_cmt(err_line, err_col);
-    case '\'': next_ch(); return char_lit(the_ch, err_line, err_col);
-    case '<':  next_ch(); return follow('=', tk_Leq, tk_Lss, err_line, err_col);
-    case '>':  next_ch(); return follow('=', tk_Geq, tk_Gtr, err_line, err_col);
-    case '=':  next_ch(); return follow('=', tk_Eq, tk_Assign, err_line, err_col);
-    case '!':  next_ch(); return follow('=', tk_Neq, tk_Not, err_line, err_col);
-    case '&':  next_ch(); return follow('&', tk_And, tk_EOI, err_line, err_col);
-    case '|':  next_ch(); return follow('|', tk_Or, tk_EOI, err_line, err_col);
-    case '"': return string_lit(the_ch, err_line, err_col);
-    default:   return ident_or_int(err_line, err_col);
-    case EOF:  return (tok_s) { tk_EOI, err_line, err_col, { 0 } };
+
+    int lineError = line;
+    int colError = col;
+
+    switch (ch) {
+    case '{':  next_ch(); return (token_s) { OpenBracket_token, lineError, colError, { 0 } };
+    case '}':  next_ch(); return (token_s) { CloseBracket_token, lineError, colError, { 0 } };
+    case '(':  next_ch(); return (token_s) { OpenParenthese_token, lineError, colError, { 0 } };
+    case ')':  next_ch(); return (token_s) { CloseParenthese_token, lineError, colError, { 0 } };
+    case '+':  next_ch(); return (token_s) { Add_token, lineError, colError, { 0 } };
+    case '-':  next_ch(); return (token_s) { Sub_token, lineError, colError, { 0 } };
+    case '*':  next_ch(); return (token_s) { Mult_token, lineError, colError, { 0 } };
+    case '%':  next_ch(); return (token_s) { Mod_token, lineError, colError, { 0 } };
+    case ';':  next_ch(); return (token_s) { Semicolon_token, lineError, colError, { 0 } };
+    case ',':  next_ch(); return (token_s) { Comma_token, lineError, colError, { 0 } };
+    case '/':  next_ch(); return div_comment(lineError, colError);
+    case '\'': next_ch(); return char_lit(ch, lineError, colError);
+    case '<':  next_ch(); return follow('=', LessThanEQ_token, LessThan_token, lineError, colError);
+    case '>':  next_ch(); return follow('=', GreaterThanEQ_token, GreaterThan_token, lineError, colError);
+    case '=':  next_ch(); return follow('=', EqualTo_token, AssignEQ_token, lineError, colError);
+    case '!':  next_ch(); return follow('=', NotEqualTo_token, Not_token, lineError, colError);
+    case '&':  next_ch(); return follow('&', And_token, EOI_token, lineError, colError);
+    case '|':  next_ch(); return follow('|', Or_token, EOI_token, lineError, colError);
+    case '"': return stringLiteral(ch, lineError, colError);
+    default:   return identifier_int(lineError, colError);
+    case EOF:  return (token_s) { EOI_token, lineError, colError, { 0 } };
     }
 }
 
-void run(void) {    /* tokenize the given input */
-    tok_s tok;
+
+// tokenize input
+void run(void) {
+    token_s token;
     do {
-        tok = gettok();
+        token = gettoken();
         fprintf(dest_fp, "%5d  %5d %.15s",
-            tok.err_ln, tok.err_col,
+            token.lnError, token.colError,
             &"End_of_input    Op_multiply     Op_divide       Op_mod          Op_add          "
             "Op_subtract     Op_negate       Op_not          Op_less         Op_lessequal    "
             "Op_greater      Op_greaterequal Op_equal        Op_notequal     Op_assign       "
@@ -210,12 +247,13 @@ void run(void) {    /* tokenize the given input */
             "Keyword_print   Keyword_putc    LeftParen       RightParen      LeftBrace       "
             "RightBrace      Semicolon       Comma           Identifier      Integer         "
             "String          "
-            [tok.tok * 16]);
-        if (tok.tok == tk_Integer)     fprintf(dest_fp, "  %4d", tok.n);
-        else if (tok.tok == tk_Ident)  fprintf(dest_fp, " %s", tok.text);
-        else if (tok.tok == tk_String) fprintf(dest_fp, " \"%s\"", tok.text);
+            [token.token * 16]);
+        if (token.token == Int_token)     fprintf(dest_fp, "  %4d", token.n);
+        else if (token.token == Identifier_token)  fprintf(dest_fp, " %s", token.text);
+        else if (token.token == String_token) fprintf(dest_fp, " \"%s\"", token.text);
         fprintf(dest_fp, "\n");
-    } while (tok.tok != tk_EOI);
+    } while (token.token != EOI_token);
+    
     if (dest_fp != stdout)
         fclose(dest_fp);
 }

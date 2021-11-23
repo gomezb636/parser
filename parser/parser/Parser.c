@@ -8,19 +8,22 @@
 
 #define NELEMS(arr) (sizeof(arr) / sizeof(arr[0]))
 
+// different tokens
 typedef enum {
-    EOI_token, Mul_token, Div_token, Mod_token, Add_token, Sub_token, Neg_token, Not_token, LessThan_token, LessThanEQ_token, GreaterThan_token,
-    GreaterThanEQ_token, EqualTo_token, NotEqualTo_token, AssignEQ_token, And_token, Or_token, If_token, Else_token, While_token, Print_token,
-    PutC_token, OpenParenthese_token, CloseParenthese_token, OpenBracket_token, CloseBracket_token, Semicolon_token, Comma_token, Idenifier_token,
-    Int_token, String_token
+    EOI_token, Mul_token, Div_token, Mod_token, Add_token, Sub_token, Neg_token, Not_token, LessThan_token, LessThanEQ_token, 
+    GreaterThan_token, GreaterThanEQ_token, EqualTo_token, NotEqualTo_token, AssignEQ_token, And_token, Or_token, If_token, 
+    Else_token, While_token, Print_token, PutC_token, OpenParenthese_token, CloseParenthese_token, OpenBracket_token, CloseBracket_token, 
+    Semicolon_token, Comma_token, Idenifier_token, Int_token, String_token
 } TokenType;
 
+// `
 typedef enum {
     nd_Ident, nd_String, nd_Integer, nd_Sequence, nd_If, nd_Prtc, nd_Prts, nd_Prti, nd_While,
     nd_Assign, nd_Negate, nd_Not, nd_Mul, nd_Div, nd_Mod, nd_Add, nd_Sub, nd_Lss, nd_Leq,
     nd_Gtr, nd_Geq, nd_Eql, nd_Neq, nd_And, nd_Or
 } NodeType;
 
+// definition of a token
 typedef struct {
     TokenType token;
     int lnError, colError;
@@ -28,7 +31,7 @@ typedef struct {
 } token_s;
 
 
-// tree
+// definition of a tree
 typedef struct Tree {
     NodeType node_type;
     struct Tree* left;

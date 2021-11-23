@@ -10,7 +10,9 @@ Teammates:
 
     3. Anjali patel - anpatel8@csu.fullerton.edu
 
-Our project has both a Lexical Analyzer and a Parser. Our Parser takes in the output from the Lexical Analyzer and generates a Parse tree. This is also known as the second phase of the compiler desing process.
+Description: 
+
+    Our project has both a Lexical Analyzer and a Parser. Our Parser takes in the output from the Lexical Analyzer and generates a Parse tree. This is also known as the second phase of the compiler desing process.
     
 *All output files have been provided, but if you wish to test on your own, below are the instructions to follow using Visual Studio*
 

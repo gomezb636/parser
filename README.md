@@ -38,6 +38,6 @@ How to Run:
         b. parser lexOutput.txt > parserOutput.txt
            (parser existingFile.txt > fileToBeCreated.txt)
 
-    6. Final output from parser can be found in "[parserOutput.txt](https://github.com/gomezb636/parser/blob/main/parser/Debug/parserOutput.txt)" file
+    6. Final output from parser can be found in [parserOutput.txt](https://github.com/gomezb636/parser/blob/main/parser/Debug/parserOutput.txt) file
 
 Link to github repository: https://github.com/gomezb636/parser

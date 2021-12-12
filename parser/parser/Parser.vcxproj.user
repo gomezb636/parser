@@ -4,4 +4,8 @@
     <LocalDebuggerCommandArguments>C:\Users\vibha\source\repos\ParserRosetta\Debug\while.t</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>C:\Users\vibha\Desktop\parser\parser\x64\Debug\lexOutput.txt &gt; C:\Users\vibha\Desktop\parser\parser\x64\Debug\parserOutput.txt</LocalDebuggerCommandArguments>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
 </Project>

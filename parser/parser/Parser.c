@@ -215,6 +215,10 @@ Tree* expression(int p) {
         x = makeLeaf(nd_Integer, token.text);
         token = gettoken();
         break;
+    case String_token:
+        x = makeLeaf(nd_String, token.text);
+        token = gettoken();
+        break;
     default:
         error(token.lnError, token.colError, "Expecting a primary, found: %s\n", atrr[token.token].text);
     }
@@ -228,7 +232,7 @@ Tree* expression(int p) {
         if (!atrr[op].right_associative)
             q++;
 
-        node = expr(q);
+        node = expression(q);
         x = makeNode(atrr[op].node_type, x, node);
     }
     return x;

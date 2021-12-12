@@ -1,0 +1,13 @@
+Sequence       
+Sequence       
+Sequence       
+;
+Assign         
+Identifier     count
+Integer        1
+Assign         
+Identifier     count
+String         "a"
+Assign         
+Identifier     limit
+String         "100"

@@ -1,0 +1,13 @@
+    4      1 Identifier      count
+    4      7 Op_assign      
+    4      9 Integer             1
+    4     10 Semicolon      
+    5      1 Identifier      count
+    5      7 Op_assign      
+    5      9 String          "a"
+    5     12 Semicolon      
+    6      1 Identifier      limit
+    6      7 Op_assign      
+    6      9 String          "100"
+    6     14 Semicolon      
+    6     15 End_of_input   

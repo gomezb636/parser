@@ -1,0 +1,4 @@
+﻿  SemanticAnalyzer.c
+C:\Users\vibha\Desktop\parser\SemanticAnalyzer\SemanticAnalyzer\SemanticAnalyzer.c(155,5): warning C4090: 'function': different 'const' qualifiers
+C:\Users\vibha\Desktop\parser\SemanticAnalyzer\SemanticAnalyzer\SemanticAnalyzer.c(190,5): warning C4090: 'function': different 'const' qualifiers
+  SemanticAnalyzer.vcxproj -> C:\Users\vibha\Desktop\parser\SemanticAnalyzer\Debug\SemanticAnalyzer.exe
